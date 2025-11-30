@@ -21,7 +21,6 @@ ShellRoot {
             exclusiveZone: _rect.height
             implicitHeight: screen.height
             Component.onCompleted: {
-                console.log("loaded", modelData.name);
             }
             Item {
                 id: _panel_states

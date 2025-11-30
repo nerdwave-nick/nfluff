@@ -7,7 +7,7 @@ import qs.Services.Niri
 import qs.Components
 import qs.Config
 
-GenericPerMonitorModule {
+FluffModuleBase {
     id: _root
     // --- Layout ---
     // Auto-size to fit content so it can be centered/anchored in a bar
@@ -169,6 +169,10 @@ GenericPerMonitorModule {
             onMiddleClicked: {
                 Niri.ipc.focus_window(id);
                 Niri.ipc.close_window();
+            }
+            onDoubleClicked: {
+                console.log("double clicked");
+                Niri.ipc.focus_window(id).then(() => Niri.ipc.toggle_windowed_fullscreen("bread")).then(() => console.log("toggled fullscreen")).catch(console.error);
             }
         }
 

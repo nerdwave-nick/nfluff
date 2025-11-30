@@ -29,6 +29,7 @@ Rectangle {
     signal leftClicked
     signal rightClicked
     signal middleClicked
+    signal doubleClicked
     signal scrolled
     signal entered
     signal exited
@@ -165,6 +166,10 @@ Rectangle {
 
         onWheel: event => {
             parent.scrolled(event);
+        }
+
+        onDoubleClicked: {
+            parent.doubleClicked();
         }
 
         onClicked: val => {
