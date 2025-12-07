@@ -47,3 +47,10 @@
 - hyprlax
 - waybar / Quickshell
 - satty (screenshot thing)
+
+
+# 4 font stuff
+uninstall gnu-free-fonts if available
+install ttf-nerd-fonts-symbols
+install noto-fonts
+install noto-fonts-emoji

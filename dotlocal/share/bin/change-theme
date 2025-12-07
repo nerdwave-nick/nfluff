@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+export SCREEN_CROSSFADE_DELAY_MS=200
+
+new_theme_path=$1
+
+if [[ -z $new_theme_path ]]; then
+    echo "Usage: change-theme <path-to-theme>"
+    exit 1
+fi
+
+if [[ ! -d $new_theme_path ]]; then
+    echo "Error: theme path does not exist"
+    exit 1
+fi
+
+current_theme_path=$HOME/.local/share/nfluff/current-theme
+
+niri msg action do-screen-transition -d  $SCREEN_CROSSFADE_DELAY_MS
+
+export THEME_PATH=$new_theme_path
+
+ln -sfT $new_theme_path $current_theme_path
+
+source $new_theme_path/hooks

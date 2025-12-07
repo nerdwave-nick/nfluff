@@ -1,0 +1,5 @@
+{
+    "autohide": true,
+    "themePath": "~/.local/share/nfluff/current-theme/nfluff-shell/theme.json",
+    "layoutPath": "~/.local/share/nfluff/current-theme/nfluff-shell/layout.json"
+}
