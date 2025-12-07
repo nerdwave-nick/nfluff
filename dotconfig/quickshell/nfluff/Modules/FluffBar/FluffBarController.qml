@@ -97,5 +97,6 @@ Item {
     Timer {
         id: _showTimer
         repeat: false
+        running: false
     }
 }

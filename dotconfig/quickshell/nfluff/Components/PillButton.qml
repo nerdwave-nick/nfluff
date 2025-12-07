@@ -30,7 +30,7 @@ Rectangle {
     signal rightClicked
     signal middleClicked
     signal doubleClicked
-    signal scrolled
+    signal scrolled(e: WheelEvent)
     signal entered
     signal exited
     signal pressed(e: MouseEvent)
@@ -41,6 +41,8 @@ Rectangle {
     radius: cornerRadius
     color: backgroundColor
     border.color: borderColor
+
+    anchors.margins: 0
 
     implicitHeight: 20
     implicitWidth: label.implicitWidth + 30

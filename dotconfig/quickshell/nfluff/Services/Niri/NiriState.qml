@@ -204,7 +204,7 @@ Item {
             _state.workspaces = _state.workspaces.map(w => {
                 if (w.id === workspaceId) {
                     let copy = Object.assign({}, w);
-                    copy.active_window_id = isUndefined ? null : activeWindowId;
+                    copy.active_window_id = isUndefined ? -1 : activeWindowId;
                     return copy;
                 }
                 return w;
