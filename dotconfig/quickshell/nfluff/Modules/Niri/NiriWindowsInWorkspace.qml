@@ -13,151 +13,43 @@ FluffModuleBase {
     readonly property real _itemSpacing: 5
     readonly property real _itemStep: _state.buttonWidth + _itemSpacing
 
-    // This is the "incoming" count from Niri (may change before we actually swap)
-    readonly property int _desiredCount: (_state.sourceWindows && _state.sourceWindows.length !== undefined) ? _state.sourceWindows.length : 0
+    // ------------------------------------------------------------
+    // Workspace swap bookkeeping
+    // ------------------------------------------------------------
 
-    // ---- Workspace-swap state ----
-    property int _currentWsId: -1
+    // What the model currently contains
+    property int _displayedWsId: -1
+
+    // The workspace we want to show now (can change rapidly)
+    property int _targetWsId: -1
+
+    // Latest incoming data for the target workspace
     property int _pendingWsId: -1
     property var _pendingSource: []
+
+    // Swap state
     property bool _workspaceSwapRunning: false
-
-    // While swapping: freeze size to whatever the *current model* is showing
-    // (prevents weird “bar grows/shrinks before content changes”).
-    readonly property int _widthCount: _workspaceSwapRunning ? _model.count : Math.max(_model.count, _desiredCount)
-
-    implicitWidth: _widthCount > 0 ? (_widthCount * _itemStep - _itemSpacing) : 0
-
-    // When swapping, suppress per-item transitions so we don't see displaced/move weirdness.
-    // We will use a whole-list fade instead.
     property bool _suppressListTransitions: false
 
+    // Keep width consistent with what is *actually displayed*
+    // During swaps we lock it, then update it while invisible.
+    property int _lockedWidthCount: 0
+    readonly property int _displayCount: _workspaceSwapRunning ? _lockedWidthCount : _model.count
+    implicitWidth: _displayCount > 0 ? (_displayCount * _itemStep - _itemSpacing) : 0
+
     readonly property int _swapOutMs: Math.max(0, Math.round(_root.animationScale * 120))
-    readonly property int _swapInMs: Math.max(0, Math.round(_root.animationScale * 380))
+    readonly property int _swapInMs: Math.max(0, Math.round(_root.animationScale * 140))
 
-    function _workspaceIdFromSource(source) {
-        // Prefer the workspace_id from the payload (most reliable).
-        if (source && source.length > 0 && source[0].workspace_id !== undefined) {
-            return source[0].workspace_id;
-        }
-        // Fallback (needed for empty workspaces).
-        return Niri.state.getActiveWorkspaceId(_root.output);
+    // Coalesce bursts of sourceChanged signals (you get many in logs)
+    // This prevents starting multiple swaps in the same frame.
+    Timer {
+        id: _processTimer
+        interval: 0
+        repeat: false
+        onTriggered: _root._processPending()
     }
-
-    function _onSourceWindowsChanged() {
-        const source = _state.sourceWindows;
-        const wsId = _workspaceIdFromSource(source);
-
-        // First time initialization
-        if (_currentWsId === -1) {
-            _currentWsId = wsId;
-            _sync();
-            return;
-        }
-
-        // Workspace changed => atomic swap
-        if (wsId !== _currentWsId) {
-            _currentWsId = wsId;
-            _beginWorkspaceSwap(wsId, source);
-            return;
-        }
-
-        // Same workspace:
-        // If we're currently swapping (fade out/in), just keep the latest payload.
-        // We'll do a final sync when swap ends.
-        if (_workspaceSwapRunning) {
-            _pendingSource = source;
-            _pendingWsId = wsId;
-            return;
-        }
-
-        // Normal (intra-workspace) diff update
-        _sync();
-    }
-
-    function _beginWorkspaceSwap(wsId, source) {
-        _pendingWsId = wsId;
-        _pendingSource = source;
-
-        // If already swapping, don't start another fade; we’ll apply latest pending
-        if (_workspaceSwapAnim.running) {
-            return;
-        }
-
-        _workspaceSwapRunning = true;
-        _suppressListTransitions = true;
-
-        _workspaceSwapAnim.restart();
-    }
-
-    function _applyPendingSwap() {
-        const src = _pendingSource || [];
-
-        // IMPORTANT: do not do incremental removes here.
-        // Clear + repopulate while invisible = zero displaced/x-jank.
-        _model.clear();
-        for (let i = 0; i < src.length; i++) {
-            _model.append(src[i]);
-        }
-    }
-
-    function _finishWorkspaceSwap() {
-        _workspaceSwapRunning = false;
-        _suppressListTransitions = false;
-
-        // Catch any last-minute updates that arrived during fade-in.
-        // (Usually focus updates/timestamps.)
-        _sync();
-    }
-
-    SequentialAnimation {
-        id: _workspaceSwapAnim
-        running: false
-
-        // Fade out old list (no model changes while visible)
-        ParallelAnimation {
-            NumberAnimation {
-                target: _swapLayer
-                property: "opacity"
-                to: 0.0
-                duration: _root._swapOutMs
-                easing.type: Easing.OutQuad
-            }
-            NumberAnimation {
-                target: _swapLayer
-                property: "scale"
-                to: 0.98
-                duration: _root._swapOutMs
-                easing.type: Easing.OutQuad
-            }
-        }
-
-        // Swap content while fully invisible
-        ScriptAction {
-            script: _root._applyPendingSwap()
-        }
-
-        // Fade in new list
-        ParallelAnimation {
-            NumberAnimation {
-                target: _swapLayer
-                property: "opacity"
-                to: 1.0
-                duration: _root._swapInMs
-                easing.type: Easing.OutQuad
-            }
-            NumberAnimation {
-                target: _swapLayer
-                property: "scale"
-                to: 1.0
-                duration: _root._swapInMs
-                easing.type: Easing.OutQuad
-            }
-        }
-
-        ScriptAction {
-            script: _root._finishWorkspaceSwap()
-        }
+    function _scheduleProcess() {
+        _processTimer.restart();
     }
 
     QtObject {
@@ -171,9 +63,163 @@ FluffModuleBase {
 
         onSourceWindowsChanged: {
             console.log("Source changed");
-            _root._onSourceWindowsChanged();
+            _root._scheduleProcess();
+        }
+        onActiveWsIdChanged: _root._scheduleProcess()
+    }
+
+    // ------------------------------------------------------------
+    // Interruptible workspace swap (the important part)
+    // ------------------------------------------------------------
+
+    function _requestWorkspaceSwap(wsId, source) {
+        _pendingWsId = wsId;
+        _pendingSource = source;
+
+        if (!_workspaceSwapRunning) {
+            _workspaceSwapRunning = true;
+            _suppressListTransitions = true;
+
+            // Lock width to what we're currently showing.
+            _lockedWidthCount = _model.count;
+        }
+
+        // If ANY swap animation is already running, interrupt it immediately.
+        // This prevents the "show old workspace for ~0.5s" problem.
+        if (_fadeOut.running || _fadeIn.running) {
+            _fadeOut.stop();
+            _fadeIn.stop();
+
+            // Make the layer invisible NOW so we can safely replace the model.
+            _swapLayer.opacity = 0.0;
+            _swapLayer.scale = 0.98;
+
+            _applyPendingSwap();
+            _fadeIn.restart();
+            return;
+        }
+
+        // Normal case: fade out, swap, fade in
+        if (_swapLayer.opacity > 0.001) {
+            _fadeOut.restart();
+        } else {
+            _applyPendingSwap();
+            _fadeIn.restart();
         }
     }
+
+    function _applyPendingSwap() {
+        const src = _pendingSource || [];
+
+        _model.clear();
+        for (let i = 0; i < src.length; i++) {
+            _model.append(src[i]);
+        }
+
+        _displayedWsId = _pendingWsId;
+
+        // Update locked width while invisible so layout changes happen "under the fade"
+        _lockedWidthCount = _model.count;
+    }
+
+    function _finishWorkspaceSwap() {
+        _workspaceSwapRunning = false;
+        _suppressListTransitions = false;
+        _lockedWidthCount = 0;
+
+        // Apply any last focus/timestamp updates that arrived during the animation
+        _sync();
+    }
+
+    ParallelAnimation {
+        id: _fadeOut
+        running: false
+
+        NumberAnimation {
+            target: _swapLayer
+            property: "opacity"
+            to: 0.0
+            duration: _root._swapOutMs
+            easing.type: Easing.OutQuad
+        }
+        NumberAnimation {
+            target: _swapLayer
+            property: "scale"
+            to: 0.98
+            duration: _root._swapOutMs
+            easing.type: Easing.OutQuad
+        }
+
+        onFinished: {
+            _root._applyPendingSwap();
+            _fadeIn.restart();
+        }
+    }
+
+    ParallelAnimation {
+        id: _fadeIn
+        running: false
+
+        NumberAnimation {
+            target: _swapLayer
+            property: "opacity"
+            to: 1.0
+            duration: _root._swapInMs
+            easing.type: Easing.OutQuad
+        }
+        NumberAnimation {
+            target: _swapLayer
+            property: "scale"
+            to: 1.0
+            duration: _root._swapInMs
+            easing.type: Easing.OutQuad
+        }
+
+        onFinished: _root._finishWorkspaceSwap()
+    }
+
+    function _processPending() {
+        const wsId = _state.activeWsId;
+        const source = _state.sourceWindows || [];
+
+        // First init
+        if (_displayedWsId === -1) {
+            _displayedWsId = wsId;
+            _targetWsId = wsId;
+            _pendingWsId = wsId;
+            _pendingSource = source;
+            _applyPendingSwap();
+            _swapLayer.opacity = 1.0;
+            _swapLayer.scale = 1.0;
+            return;
+        }
+
+        // Workspace changed (even rapidly): always request a swap
+        if (wsId !== _targetWsId) {
+            _targetWsId = wsId;
+            _requestWorkspaceSwap(wsId, source);
+            return;
+        }
+
+        // Same workspace:
+        // If swap is running, keep the newest source so the moment we’re invisible
+        // we can apply it immediately (and interruptions work cleanly).
+        if (_workspaceSwapRunning) {
+            _pendingWsId = wsId;
+            _pendingSource = source;
+
+            // If we are currently fully invisible and not fading out, apply immediately.
+            if (_swapLayer.opacity <= 0.001 && !_fadeOut.running) {
+                _applyPendingSwap();
+            }
+            return;
+        }
+
+        // Intra-workspace updates: diff sync normally
+        _sync();
+    }
+
+    // ------------------------------------------------------------
 
     function _scroll(event) {
         if (event.angleDelta.y > 0) {
@@ -188,16 +234,15 @@ FluffModuleBase {
         onWheel: event => _root._scroll(event)
     }
 
-    // --- 2. The Sync Engine ---
+    // --- Sync engine ---
 
     ListModel {
         id: _model
     }
 
     function _sync() {
-        // If swap animation is running, don't fight it.
-        // We will sync at the end in _finishWorkspaceSwap().
-        if (_workspaceSwapAnim.running) {
+        // Don't diff while swapping
+        if (_workspaceSwapRunning || _fadeOut.running || _fadeIn.running) {
             return;
         }
 
@@ -213,7 +258,6 @@ FluffModuleBase {
         }
 
         let i = 0;
-
         while (i < count) {
             const win = source[i];
 
@@ -272,6 +316,8 @@ FluffModuleBase {
             _model.remove(_model.count - 1);
         }
     }
+
+    // --- Your compact/full transitions unchanged ---
 
     state: fluffBarController.shouldShow ? "full" : "compact"
     states: [
@@ -339,7 +385,7 @@ FluffModuleBase {
         }
     ]
 
-    // --- 3. Rendering ---
+    // --- Rendering ---
 
     Item {
         id: _swapLayer
@@ -355,10 +401,9 @@ FluffModuleBase {
             interactive: false
 
             model: _model
-
             contentWidth: _model.count > 0 ? (_model.count * _root._itemStep - _root._itemSpacing) : 0
 
-            // --- Animations ---
+            // --- Transitions (suppressed during workspace swaps) ---
 
             Transition {
                 id: _addTransition
@@ -418,7 +463,6 @@ FluffModuleBase {
                 }
             }
 
-            // Gate transitions during workspace swaps
             add: _root._suppressListTransitions ? null : _addTransition
             remove: _root._suppressListTransitions ? null : _removeTransition
             populate: _root._suppressListTransitions ? null : _addTransition
@@ -437,14 +481,12 @@ FluffModuleBase {
                 required property var layout
                 required property var title
                 required property var app_id
-
                 required property bool is_focused
                 required property bool is_floating
 
                 height: _view.height
                 width: _state.buttonWidth
 
-                // Stable base (important if delegates get reused)
                 scale: 1.0
                 opacity: 1.0
 
