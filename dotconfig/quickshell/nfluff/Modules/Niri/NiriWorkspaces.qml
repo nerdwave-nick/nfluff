@@ -9,8 +9,6 @@ import qs.Config
 FluffModuleBase {
     id: _root
     implicitHeight: _view.count === 0 ? _view.contentItem.childrenRect.height : _view.contentHeight
-    anchors.left: parent.left
-    anchors.right: parent.right
 
     QtObject {
         id: _state

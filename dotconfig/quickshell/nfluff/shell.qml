@@ -1,7 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import QtQuick.Layouts
+import QtQuick.Layouts as Fuck
 import Quickshell
 import qs.Services.Niri
 import qs.Modules.Niri
@@ -24,7 +24,7 @@ ShellRoot {
             screen: modelData
             color: "transparent"
             property double screenHeight: screen.height
-            exclusiveZone: _rectLeft.width
+            exclusiveZone: _left_rect.width
             exclusionMode: Config.autohide ? ExclusionMode.Ignore : ExclusionMode.Normal
             anchors {
                 top: true
@@ -32,7 +32,7 @@ ShellRoot {
                 bottom: true
             }
             mask: Region {
-                item: _rectLeft
+                item: _left_rect
             }
 
             property bool forceFluffBarClosed: false
@@ -43,11 +43,11 @@ ShellRoot {
                 mouseArea: _mouse_area_left
             }
             Rectangle {
-                id: _rectLeft
+                id: _left_rect
                 anchors.verticalCenter: parent.verticalCenter
                 x: -1.5
                 width: 30
-                height: _layout.implicitHeight + 20
+                height: _left_layout.implicitHeight + 20
                 topRightRadius: Theme.shapes.corner.small
                 bottomRightRadius: Theme.shapes.corner.small
                 color: Theme.colors.background
@@ -67,13 +67,13 @@ ShellRoot {
                         State {
                             name: "expanded"
                             PropertyChanges {
-                                _rectLeft.x: -1.5
+                                _left_rect.x: -1.5
                             }
                         },
                         State {
                             name: "collapsed"
                             PropertyChanges {
-                                _rectLeft.x: -1 * _rectLeft.width + 5
+                                _left_rect.x: -1 * _left_rect.width + 5
                             }
                         }
                     ]
@@ -92,7 +92,7 @@ ShellRoot {
                                 }
                                 ParallelAnimation {
                                     NumberAnimation {
-                                        target: _rectLeft
+                                        target: _left_rect
                                         property: "x"
                                         duration: _root.animationScale * 200
                                         easing.type: Easing.InQuad
@@ -115,7 +115,7 @@ ShellRoot {
                                     }
                                 }
                                 NumberAnimation {
-                                    target: _rectLeft
+                                    target: _left_rect
                                     property: "x"
                                     duration: _root.animationScale * 200
                                     easing.type: Easing.OutQuad
@@ -124,13 +124,14 @@ ShellRoot {
                         }
                     ]
 
-                    ColumnLayout {
-                        id: _layout
+                    Fuck.ColumnLayout {
+                        id: _left_layout
                         anchors.verticalCenter: parent.verticalCenter
                         anchors.left: parent.left
                         anchors.right: parent.right
                         spacing: 10
                         NiriWorkspaces {
+                            Fuck.Layout.fillWidth: true
                             output: _window_left.screen.name
                             fluffBarController: _fluffBarLeft
                             animationScale: _root.animationScale
@@ -148,8 +149,7 @@ ShellRoot {
             screen: modelData
             color: "transparent"
             property double screenWidth: screen.width
-            exclusiveZone: _rectTop.height
-            implicitHeight: screen.height
+            exclusiveZone: _top_rect.height
             exclusionMode: Config.autohide ? ExclusionMode.Ignore : ExclusionMode.Normal
             anchors {
                 top: true
@@ -157,7 +157,7 @@ ShellRoot {
                 right: true
             }
             mask: Region {
-                item: _rectTop
+                item: _top_rect
             }
 
             property bool forceFluffBarClosed: false
@@ -169,27 +169,24 @@ ShellRoot {
                 mouseArea: _mouse_area_top
             }
             Rectangle {
-                id: _rectTop
+                id: _top_rect
                 anchors.horizontalCenter: parent.horizontalCenter
                 y: -1.5
                 height: 30
-                width: _window_top.screenWidth / 1.618
-                bottomLeftRadius: Theme.shapes.corner.large
-                bottomRightRadius: Theme.shapes.corner.large
+                width: Math.max(_top_layout.implicitWidth + 20, 150)
+                bottomLeftRadius: Theme.shapes.corner.small
+                bottomRightRadius: Theme.shapes.corner.small
                 color: Theme.colors.background
                 border.width: 0.5
                 antialiasing: true
                 border.pixelAligned: false
                 border.color: Theme.colors.primaryContainer
                 clip: true
-
-                property double maxCollapsedWidth: 1280
-                property double minCollapsedWidth: 640
-                property double clampedCollapsedWidth: Math.min(maxCollapsedWidth, Math.max(_window_top.screenWidth / 1.718, minCollapsedWidth))
-
-                property double maxExpandedWidth: 1280
-                property double minExpandedWidth: 640
-                property double clampedExpandedWidth: Math.min(maxExpandedWidth, Math.max(_window_top.screenWidth / 1.618, minExpandedWidth))
+                Behavior on width {
+                    NumberAnimation {
+                        duration: _root.animationScale * 200
+                    }
+                }
 
                 MouseArea {
                     id: _mouse_area_top
@@ -201,15 +198,13 @@ ShellRoot {
                         State {
                             name: "expanded"
                             PropertyChanges {
-                                _rectTop.y: -1.5
-                                _rectTop.width: _rectTop.clampedExpandedWidth
+                                _top_rect.y: -1.5
                             }
                         },
                         State {
                             name: "collapsed"
                             PropertyChanges {
-                                _rectTop.y: -1 * _rectTop.height + 5
-                                _rectTop.width: _rectTop.clampedCollapsedWidth
+                                _top_rect.y: -1 * _top_rect.height + 5
                             }
                         }
                     ]
@@ -228,14 +223,8 @@ ShellRoot {
                                 }
                                 ParallelAnimation {
                                     NumberAnimation {
-                                        target: _rectTop
+                                        target: _top_rect
                                         property: "y"
-                                        duration: _root.animationScale * 200
-                                        easing.type: Easing.InQuad
-                                    }
-                                    NumberAnimation {
-                                        target: _rectTop
-                                        property: "width"
                                         duration: _root.animationScale * 200
                                         easing.type: Easing.InQuad
                                     }
@@ -257,14 +246,8 @@ ShellRoot {
                                     }
                                 }
                                 NumberAnimation {
-                                    target: _rectTop
+                                    target: _top_rect
                                     property: "y"
-                                    duration: _root.animationScale * 200
-                                    easing.type: Easing.OutQuad
-                                }
-                                NumberAnimation {
-                                    target: _rectTop
-                                    property: "width"
                                     duration: _root.animationScale * 200
                                     easing.type: Easing.OutQuad
                                 }
@@ -290,13 +273,19 @@ ShellRoot {
                     //         }
                     //     }
                     // }
-                    NiriWindowsInWorkspace {
+                    Fuck.RowLayout {
+                        id: _top_layout
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.top: parent.top
                         anchors.bottom: parent.bottom
-                        output: _window_top.screen.name
-                        fluffBarController: _fluffBarTop
-                        animationScale: _root.animationScale
+
+
+                        NiriWindowsInWorkspace {
+                            output: _window_top.screen.name
+                            fluffBarController: _fluffBarTop
+                            animationScale: _root.animationScale
+                            Fuck.Layout.fillHeight: true
+                        }
                     }
                     // RowLayout {
                     //     id: layout

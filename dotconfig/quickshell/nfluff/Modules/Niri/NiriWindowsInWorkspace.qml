@@ -9,7 +9,9 @@ import qs.Config
 
 FluffModuleBase {
     id: _root
-    width: _view.count === 0 ? _view.contentItem.childrenRect.width : _view.contentWidth
+    implicitWidth: _view.count === 0 ? _view.contentItem.childrenRect.width : _view.contentWidth
+
+
 
     QtObject {
         id: _state
@@ -101,30 +103,16 @@ FluffModuleBase {
     states: [
         State {
             name: "compact"
-            AnchorChanges {
-                target: _root
-                anchors.top: _root.parent.bottom
-                anchors.bottom: _root.parent.bottom
-            }
             PropertyChanges {
-                _root.anchors.topMargin: -12
-                _root.anchors.bottomMargin: 2
-                _state.cornerRadius: 0
-                _state.buttonWidth: 15
+                _view.anchors.topMargin: 0
+                _view.anchors.bottomMargin: 0
             }
         },
         State {
             name: "full"
-            AnchorChanges {
-                target: _root
-                anchors.top: _root.parent.verticalCenter
-                anchors.bottom: _root.parent.verticalCenter
-            }
             PropertyChanges {
-                _root.anchors.topMargin: -5
-                _root.anchors.bottomMargin: -5
-                _state.cornerRadius: Theme.shapes.corner.small
-                _state.buttonWidth: 20
+                _view.anchors.topMargin: 8
+                _view.anchors.bottomMargin: 8 
             }
         }
     ]
@@ -137,23 +125,15 @@ FluffModuleBase {
                     duration: _root.animationScale * 50
                 }
                 ParallelAnimation {
-                    AnchorAnimation {
-                        duration: _root.animationScale * 150
-                        easing.type: Easing.OutQuad
-                    }
-                    PropertyAnimation {
+                    NumberAnimation {
+                        target: _view.anchors
+                        property: "bottomMargin"
                         duration: _root.animationScale * 150
                         easing.type: Easing.OutQuad
                     }
                     NumberAnimation {
-                        target: _state
-                        property: "cornerRadius"
-                        duration: _root.animationScale * 150
-                        easing.type: Easing.OutQuad
-                    }
-                    NumberAnimation {
-                        target: _state
-                        property: "buttonWidth"
+                        target: _view.anchors
+                        property: "topMargin"
                         duration: _root.animationScale * 150
                         easing.type: Easing.OutQuad
                     }
@@ -168,23 +148,15 @@ FluffModuleBase {
                     duration: _root.animationScale * 300
                 }
                 ParallelAnimation {
-                    AnchorAnimation {
-                        duration: _root.animationScale * 200
-                        easing.type: Easing.InQuad
-                    }
-                    PropertyAnimation {
+                    NumberAnimation {
+                        target: _view.anchors
+                        property: "bottomMargin"
                         duration: _root.animationScale * 200
                         easing.type: Easing.InQuad
                     }
                     NumberAnimation {
-                        target: _state
-                        property: "cornerRadius"
-                        duration: _root.animationScale * 200
-                        easing.type: Easing.InQuad
-                    }
-                    NumberAnimation {
-                        target: _state
-                        property: "buttonWidth"
+                        target: _view.anchors
+                        property: "topMargin"
                         duration: _root.animationScale * 200
                         easing.type: Easing.OutQuad
                     }
@@ -200,7 +172,6 @@ FluffModuleBase {
         orientation: ListView.Horizontal
         spacing: 5
         contentWidth: contentItem.childrenRect.width
-
         anchors.fill: parent
 
         // Prevent scrolling interaction for a static bar
@@ -228,15 +199,15 @@ FluffModuleBase {
         add: Transition {
             NumberAnimation {
                 property: "scale"
-                from: 0.8
+                from: 0.0
                 to: 1.0
-                duration: _root.animationScale * 150
+                duration: _root.animationScale * 550
             }
             NumberAnimation {
                 property: "opacity"
                 from: 0
                 to: 1
-                duration: _root.animationScale * 150
+                duration: _root.animationScale * 550
             }
         }
 
@@ -244,13 +215,15 @@ FluffModuleBase {
         remove: Transition {
             NumberAnimation {
                 property: "scale"
-                to: 0.8
-                duration: _root.animationScale * 150
+                from: 1.0
+                to: 0.0
+                duration: _root.animationScale * 550
             }
             NumberAnimation {
                 property: "opacity"
+                from: 1.0
                 to: 0
-                duration: _root.animationScale * 150
+                duration: _root.animationScale * 550
             }
         }
 
@@ -264,7 +237,9 @@ FluffModuleBase {
             required property bool is_focused
             required property bool is_floating
 
-            height: 10
+            
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
             width: _state.buttonWidth
             backgroundColor: {
                 if (is_floating) {
