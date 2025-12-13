@@ -185,12 +185,12 @@ FluffModuleBase {
         displaced: Transition {
             NumberAnimation {
                 properties: "x,y"
-                duration: _root.animationScale * 100
+                duration: _root.animationScale * 600
                 easing.type: Easing.OutQuad
             }
         }
-        addDisplaced: displaced
-        removeDisplaced: displaced
+        addDisplaced: add
+        removeDisplaced: remove
         moveDisplaced: displaced
         move: displaced
         populate: add
@@ -201,13 +201,13 @@ FluffModuleBase {
                 property: "scale"
                 from: 0.0
                 to: 1.0
-                duration: _root.animationScale * 550
+                duration: _root.animationScale * 600
             }
             NumberAnimation {
                 property: "opacity"
                 from: 0
                 to: 1
-                duration: _root.animationScale * 550
+                duration: _root.animationScale * 600
             }
         }
 
@@ -217,13 +217,13 @@ FluffModuleBase {
                 property: "scale"
                 from: 1.0
                 to: 0.0
-                duration: _root.animationScale * 550
+                duration: _root.animationScale * 600
             }
             NumberAnimation {
                 property: "opacity"
                 from: 1.0
                 to: 0
-                duration: _root.animationScale * 550
+                duration: _root.animationScale * 600
             }
         }
 
