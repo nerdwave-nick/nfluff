@@ -47,7 +47,7 @@ ShellRoot {
                 anchors.verticalCenter: parent.verticalCenter
                 x: -1.5
                 width: 30
-                height: _layout.implicitHeight + _layout.children.length * 20
+                height: _layout.implicitHeight + 20
                 topRightRadius: Theme.shapes.corner.small
                 bottomRightRadius: Theme.shapes.corner.small
                 color: Theme.colors.background
