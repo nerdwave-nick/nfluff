@@ -62,7 +62,6 @@ FluffModuleBase {
         property real buttonWidth: 30
 
         onSourceWindowsChanged: {
-            console.log("Source changed");
             _root._scheduleProcess();
         }
         onActiveWsIdChanged: _root._scheduleProcess()
@@ -249,10 +248,7 @@ FluffModuleBase {
         const source = _state.sourceWindows;
         const count = source.length;
 
-        console.log("Syncing with source", JSON.stringify(source), "Count:", count);
-
         if (count === 0) {
-            console.log("Clearing model");
             _model.clear();
             return;
         }
@@ -262,7 +258,6 @@ FluffModuleBase {
             const win = source[i];
 
             if (i >= _model.count) {
-                console.log("Appending new item", JSON.stringify(win));
                 _model.append(win);
                 i++;
                 continue;
@@ -272,7 +267,6 @@ FluffModuleBase {
             const modelId = modelItem.id;
 
             if (modelId === win.id) {
-                console.log("Updating item", JSON.stringify(win));
                 _model.set(i, win);
                 i++;
                 continue;
@@ -287,7 +281,6 @@ FluffModuleBase {
             }
 
             if (isGarbage) {
-                console.log("Removing item", JSON.stringify(modelItem));
                 _model.remove(i);
                 continue;
             }
@@ -301,10 +294,8 @@ FluffModuleBase {
             }
 
             if (foundIndex !== -1) {
-                console.log("Moving item", JSON.stringify(modelItem), "to", foundIndex);
                 _model.move(foundIndex, i, 1);
             } else {
-                console.log("Inserting item", JSON.stringify(win));
                 _model.insert(i, win);
             }
 
@@ -312,7 +303,6 @@ FluffModuleBase {
         }
 
         while (_model.count > count) {
-            console.log("Removing trailing item", JSON.stringify(_model.get(_model.count - 1)));
             _model.remove(_model.count - 1);
         }
     }

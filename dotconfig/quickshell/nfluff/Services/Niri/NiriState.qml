@@ -93,19 +93,15 @@ Item {
                     return posA[1] - posB[1];
                 }
 
-                console.log("comparing floaters a", JSON.stringify(a));
-                console.log("comparing floaters b", JSON.stringify(b));
                 // sort floating windows
                 if (a.layout.tile_pos_in_workspace_view && b.layout.tile_pos_in_workspace_view) {
                     const a_tile_pos = a.layout.tile_pos_in_workspace_view;
                     const b_tile_pos = b.layout.tile_pos_in_workspace_view;
                     // Left -> Right
                     if (a_tile_pos[0] !== b_tile_pos[0]) {
-                        console.log("a.x - b.x", a_tile_pos[0], b_tile_pos[0]);
                         return a_tile_pos[0] - b_tile_pos[0];
                     }
                     // Top -> Bottom
-                    console.log("a.y - b.y", a_tile_pos[1], b_tile_pos[1]);
                     return a_tile_pos[1] - b_tile_pos[1];
                 }
 
@@ -239,8 +235,6 @@ Item {
         }
 
         function onWindowOpenedOrChanged(window) {
-            console.log("onWindowOpenedOrChanged", JSON.stringify(window));
-
             const idx = _state.windows.findIndex(w => w.id === window.id);
             let list = _state.windows.slice();
 
@@ -304,7 +298,6 @@ Item {
 
             let newList = _state.windows.map(w => {
                 if (layoutMap.hasOwnProperty(w.id)) {
-                    console.log("assigning layouts changed", w.id, JSON.stringify(layoutMap[w.id]));
                     let copy = Object.assign({}, w);
                     copy.layout = layoutMap[w.id];
                     return copy;
