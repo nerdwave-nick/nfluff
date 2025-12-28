@@ -7,6 +7,7 @@ import qs.Services.Niri
 import qs.Modules.Niri
 import qs.Modules.FluffBar
 import qs.Config
+import qs.Components
 
 ShellRoot {
     id: _root
@@ -19,26 +20,30 @@ ShellRoot {
     Variants {
         model: Quickshell.screens
         delegate: PanelWindow {
-            id: _window_left
+            id: _panel
             required property var modelData
             screen: modelData
             color: "transparent"
-            property double screenHeight: screen.height
-            exclusiveZone: _left_rect.width
-            exclusionMode: Config.autohide ? ExclusionMode.Ignore : ExclusionMode.Normal
+
             anchors {
                 top: true
                 left: true
                 bottom: true
+                right: true
             }
             mask: Region {
-                item: _left_rect
+                Region {
+                    item: _left_rect
+                }
+                Region {
+                    item: _top_center
+                }
             }
 
             property bool forceFluffBarClosed: false
             FluffBarController {
                 id: _fluffBarLeft
-                forceClosed: _window_left.forceFluffBarClosed
+                forceClosed: _panel.forceFluffBarClosed
                 autoHideEnabled: Config.autohide
                 mouseArea: _mouse_area_left
             }
@@ -132,176 +137,43 @@ ShellRoot {
                         spacing: 10
                         NiriWorkspaces {
                             Fuck.Layout.fillWidth: true
-                            output: _window_left.screen.name
+                            output: _panel.screen.name
                             fluffBarController: _fluffBarLeft
                             animationScale: _root.animationScale
                         }
                     }
                 }
             }
-        }
-    }
-    Variants {
-        model: Quickshell.screens
-        delegate: PanelWindow {
-            id: _window_top
-            required property var modelData
-            screen: modelData
-            color: "transparent"
-            property double screenWidth: screen.width
-            exclusiveZone: _top_rect.height
-            exclusionMode: Config.autohide ? ExclusionMode.Ignore : ExclusionMode.Normal
-            anchors {
-                top: true
-                left: true
-                right: true
-            }
-            mask: Region {
-                item: _top_rect
-            }
-
-            property bool forceFluffBarClosed: false
-
-            FluffBarController {
-                id: _fluffBarTop
-                forceClosed: _window_top.forceFluffBarClosed
-                autoHideEnabled: Config.autohide
-                mouseArea: _mouse_area_top
-            }
-            Rectangle {
-                id: _top_rect
+            HorizontalBar {
+                id: _top_center
                 anchors.horizontalCenter: parent.horizontalCenter
-                y: -1.5
-                height: 30
-                width: Math.max(_top_layout.implicitWidth + 20, 150)
-                bottomLeftRadius: Theme.shapes.corner.small
-                bottomRightRadius: Theme.shapes.corner.small
-                color: Theme.colors.background
-                border.width: 0.5
-                antialiasing: true
-                border.pixelAligned: false
-                border.color: Theme.colors.primaryContainer
-                clip: true
-                Behavior on width {
-                    NumberAnimation {
-                        duration: _root.animationScale * 200
+                name: "top-center"
+                yExpanded: -1.5
+                yHidden: -1 * 30 + 5
+                barBorderWidth: 0.5
+                barHeight: 30
+                barWidthMin: 150
+                barChildMargin: 20
+                animationScale: _root.animationScale
+                barBottomLeftRadius: Theme.shapes.corner.small
+                barBottomRightRadius: Theme.shapes.corner.small
+                barTopLeftRadius: Theme.shapes.corner.small
+                barTopRightRadius: Theme.shapes.corner.small
+                barBackgroundColor: Theme.colors.background
+                barBorderColor: Theme.colors.primaryContainer
+                forceClosed: _panel.forceFluffBarClosed
+                autoHideEnabled: Config.autohide
+                expansionDuration: 200
+                collapseDuration: 300
+                widthAnimationDuration: 200
+                children: [
+                    NiriWindowsInWorkspace {
+                        output: _panel.screen.name
+                        fluffBarController: _top_center.controller
+                        animationScale: _root.animationScale
+                        Fuck.Layout.fillHeight: true
                     }
-                }
-
-                MouseArea {
-                    id: _mouse_area_top
-                    anchors.fill: parent
-                    hoverEnabled: true
-
-                    state: _fluffBarTop.shouldShow ? "expanded" : "collapsed"
-                    states: [
-                        State {
-                            name: "expanded"
-                            PropertyChanges {
-                                _top_rect.y: -1.5
-                            }
-                        },
-                        State {
-                            name: "collapsed"
-                            PropertyChanges {
-                                _top_rect.y: -1 * _top_rect.height + 5
-                            }
-                        }
-                    ]
-                    transitions: [
-                        Transition {
-                            from: "expanded"
-                            to: "collapsed"
-                            SequentialAnimation {
-                                ScriptAction {
-                                    script: {
-                                        _fluffBarTop.preventHiding("rect-collapse-anim", true);
-                                    }
-                                }
-                                PauseAnimation {
-                                    duration: _root.animationScale * 300
-                                }
-                                ParallelAnimation {
-                                    NumberAnimation {
-                                        target: _top_rect
-                                        property: "y"
-                                        duration: _root.animationScale * 200
-                                        easing.type: Easing.InQuad
-                                    }
-                                }
-                                ScriptAction {
-                                    script: {
-                                        _fluffBarTop.preventHiding("rect-collapse-anim", false);
-                                    }
-                                }
-                            }
-                        },
-                        Transition {
-                            from: "collapsed"
-                            to: "expanded"
-                            ParallelAnimation {
-                                ScriptAction {
-                                    script: {
-                                        _fluffBarTop.preventHiding(200);
-                                    }
-                                }
-                                NumberAnimation {
-                                    target: _top_rect
-                                    property: "y"
-                                    duration: _root.animationScale * 200
-                                    easing.type: Easing.OutQuad
-                                }
-                            }
-                        }
-                    ]
-
-                    // RowLayout {
-                    //     anchors.left: parent.left
-                    //     anchors.leftMargin: Theme.spacing.lg
-                    //     anchors.verticalCenter: parent.verticalCenter
-                    //     Repeater {
-                    //         id: workspaces
-                    //         model: Niri.state.workspaces
-                    //         Text {
-                    //             required property bool is_focused
-                    //             color: Theme.colors.primary
-                    //             font.pixelSize: Theme.typography.medium.size
-                    //             font.weight: Theme.typography.medium.weight
-                    //             font.bold: is_focused
-                    //             font.letterSpacing: 8
-                    //             text: is_focused ? "⊙" : "⋅"
-                    //         }
-                    //     }
-                    // }
-                    Fuck.RowLayout {
-                        id: _top_layout
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        anchors.top: parent.top
-                        anchors.bottom: parent.bottom
-
-
-                        NiriWindowsInWorkspace {
-                            output: _window_top.screen.name
-                            fluffBarController: _fluffBarTop
-                            animationScale: _root.animationScale
-                            Fuck.Layout.fillHeight: true
-                        }
-                    }
-                    // RowLayout {
-                    //     id: layout
-                    //     anchors.right: parent.right
-                    //     anchors.rightMargin: Theme.spacing.lg
-                    //     anchors.verticalCenter: parent.verticalCenter
-                    //     Text {
-                    //         font.family: Theme.typography.fontFamily
-                    //         font.pixelSize: Theme.typography.medium.size
-                    //         font.weight: Theme.typography.medium.weight
-
-                    //         color: Theme.colors.on.background
-                    //         text: Qt.formatDateTime(clock.date, "hh:mm")
-                    //     }
-                    // }
-                }
+                ]
             }
         }
     }
