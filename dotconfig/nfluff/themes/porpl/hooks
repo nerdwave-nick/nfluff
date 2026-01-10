@@ -1,0 +1,6 @@
+# reload kitty config
+pkill -SIGUSR1 kitty
+
+awww img $THEME_PATH/wallpapers/1.png -t wipe --transition-fps 120 &
+
+

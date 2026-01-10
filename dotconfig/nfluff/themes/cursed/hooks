@@ -1,4 +1,0 @@
-# reload kitty config
-pkill -SIGUSR1 kitty
-
-awww img $THEME_PATH/wallpapers/1.jpg -t wipe&

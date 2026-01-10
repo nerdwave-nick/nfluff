@@ -1,0 +1,53 @@
+{
+    "colors": {
+        "primary": "#A78BFA",
+        "onPrimary": "#1A102A",
+        "primaryContainer": "#4B3A7A",
+        "onPrimaryContainer": "#EDE4FF",
+        "secondary": "#6C5EC9",
+        "onSecondary": "#FFFFFF",
+        "secondaryContainer": "#3D347F",
+        "onSecondaryContainer": "#E8E3FF",
+        "tertiary": "#7AD9FF",
+        "onTertiary": "#00141A",
+        "tertiaryContainer": "#1F3A54",
+        "onTertiaryContainer": "#D3F5FF",
+        "error": "#FFD98A",
+        "onError": "#3A2600",
+        "errorContainer": "#5A4100",
+        "onErrorContainer": "#FFF2D4",
+        "background": "#0C0A12",
+        "onBackground": "#DCD4FF",
+        "surface": "#130F20",
+        "onSurface": "#E8E0FF",
+        "surfaceVariant": "#2F2A44",
+        "onSurfaceVariant": "#C4BEE0",
+        "outline": "#3C335A",
+        "shadow": "#000000"
+    },
+    "typography": {
+        "fontFamily": "Geist",
+        "large": {
+            "size": 32,
+            "weight": 400
+        },
+        "medium": {
+            "size": 16,
+            "weight": 500
+        },
+        "small": {
+            "size": 11,
+            "weight": 500
+        }
+    },
+    "shapes": {
+        "cornerSmall": 4,
+        "cornerMedium": 8,
+        "cornerLarge": 16
+    },
+    "spacing": {
+        "sm": 8,
+        "md": 16,
+        "lg": 24
+    }
+}
