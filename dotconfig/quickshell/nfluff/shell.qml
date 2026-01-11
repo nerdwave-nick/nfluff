@@ -183,12 +183,12 @@ ShellRoot {
             }
             HorizontalBar {
                 id: _top_right
-                anchors.right: parent.right
-                anchors.rightMargin: 80
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.leftMargin: 80
 
                 name: "top-center"
-                yExpanded: -1.5
-                yHidden: -1 * _top_right.barHeight + 5
+                yHidden: -5 + _panel.screen.height
+                yExpanded: _panel.screen.height  - _top_right.barHeight + 1.5
                 barBorderWidth: 0.5
                 barHeight: _top_right.children[0].implicitHeight
                 // barHeight: 30
@@ -209,13 +209,6 @@ ShellRoot {
                 children: [
                     Fuck.ColumnLayout {
                         spacing: 8
-                        Text {
-                            text: Qt.formatDate(clock.date, "ddd, dd MMM yyyy")
-                            color: Theme.colors.primary
-                            font.pixelSize: _top_right.controller.isShowing ? 16 : 12
-                            font.family: Theme.typography.fontFamily
-                            font.bold: true
-                        }
                         Fuck.RowLayout {
                             spacing: 0
                             Fuck.Layout.alignment: Qt.AlignHCenter
@@ -236,6 +229,13 @@ ShellRoot {
                                 font.bold: true
                                 font.family: Theme.typography.fontFamily
                             }
+                        }
+                        Text {
+                            text: Qt.formatDate(clock.date, "ddd, dd MMM yyyy")
+                            color: Theme.colors.primary
+                            font.pixelSize: _top_right.controller.isShowing ? 16 : 12
+                            font.family: Theme.typography.fontFamily
+                            font.bold: true
                         }
                     }
                 ]
