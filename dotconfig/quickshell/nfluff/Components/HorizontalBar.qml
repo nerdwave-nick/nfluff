@@ -102,7 +102,7 @@ Item {
                     SequentialAnimation {
                         ScriptAction {
                             script: {
-                                _top_fluff_controller.preventHiding(_root.name, true);
+                                _controller.preventHiding(_root.name, true);
                             }
                         }
                         PauseAnimation {
@@ -118,7 +118,7 @@ Item {
                         }
                         ScriptAction {
                             script: {
-                                _top_fluff_controller.preventHiding(_root.name, false);
+                                _controller.preventHiding(_root.name, false);
                             }
                         }
                     }
