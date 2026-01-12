@@ -88,7 +88,7 @@ Singleton {
         var t = "";
         t += timesTable[hours % 12];
 
-        t += " ¤ ";
+        t += "🮇▅▎";
         t += minutesTable[minutes % 60];
 
         return t;

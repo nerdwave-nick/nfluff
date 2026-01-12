@@ -215,8 +215,8 @@ ShellRoot {
                             Text {
                                 text: _top_right.controller.isShowing ? Qt.formatTime(clock.date, "HH:mm") : Utility.getTime(clock.date)
                                 color: Theme.colors.primary
-                                Fuck.Layout.bottomMargin: _top_right.controller.isShowing ? 0:-3
-                                font.pixelSize: _top_right.controller.isShowing ? 16 : 8
+                                Fuck.Layout.topMargin: _top_right.controller.isShowing ? 0:-1
+                                font.pixelSize: _top_right.controller.isShowing ? 16 : 10
                                 font.bold: true
                                 font.family: Theme.typography.fontFamily
                             }
