@@ -41,9 +41,9 @@
         }
     },
     "shapes": {
-        "cornerSmall": 4,
-        "cornerMedium": 8,
-        "cornerLarge": 16
+        "cornerSmall": 2,
+        "cornerMedium": 4,
+        "cornerLarge": 8
     },
     "spacing": {
         "sm": 8,
